@@ -2,8 +2,8 @@ from typing import Optional, Dict, Any
 from .base_model import BaseLLMModel
 from .azure_strategy import AzureOpenAIStrategy
 from .openai_strategy import OpenAIStrategy
-from .unsloth_strategy import UnslothStrategy
-from .cohere_strategy import CohereStrategy
+# from .unsloth_strategy import UnslothStrategy
+# from .cohere_strategy import CohereStrategy
 
 
 class ModelFactory:
@@ -46,15 +46,15 @@ class ModelFactory:
         elif model_name_lower.startswith("deepseek"):
             return OpenAIStrategy(model_name, device, **kwargs)
 
-        elif "aya" in model_name_lower:
-            return CohereStrategy(model_name, device, **kwargs)
+        # elif "aya" in model_name_lower:
+        #     return CohereStrategy(model_name, device, **kwargs)
 
-        elif model_name_lower.startswith("unsloth/"):
-            return UnslothStrategy(model_name, device, **kwargs)
+        # elif model_name_lower.startswith("unsloth/"):
+        #     return UnslothStrategy(model_name, device, **kwargs)
 
-        else:
-            # Default to Unsloth for other HuggingFace models
-            return UnslothStrategy(model_name, device, **kwargs)
+        # else:
+        #     # Default to Unsloth for other HuggingFace models
+        #     return UnslothStrategy(model_name, device, **kwargs)
 
     @staticmethod
     def get_supported_models() -> Dict[str, list]:
@@ -82,11 +82,11 @@ class ModelFactory:
                 "o4-mini",
                 "gpt-4.1-2025-04-14",
             ],
-            "unsloth": [
-                "unsloth/gemma-3-12b-it-bnb-4bit",
-                "unsloth/gemma-2-9b-it-bnb-4bit",
-                "unsloth/qwen3-14b",
-                "unsloth/qwen3-8b",
-            ],
-            "cohere": ["CohereLabs/aya-expanse-8b"],
+            # "unsloth": [
+            #     "unsloth/gemma-3-12b-it-bnb-4bit",
+            #     "unsloth/gemma-2-9b-it-bnb-4bit",
+            #     "unsloth/qwen3-14b",
+            #     "unsloth/qwen3-8b",
+            # ],
+            # "cohere": ["CohereLabs/aya-expanse-8b"],
         }
