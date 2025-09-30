@@ -1,0 +1,15 @@
+# Testing dependencies for LLM Model Strategy Pattern
+pytest>=7.0.0
+pytest-mock>=3.10.0
+pytest-cov>=4.0.0
+pytest-xdist>=3.0.0  # For parallel test execution
+
+# Mocking and testing utilities
+unittest-mock>=1.0.0
+
+# Optional: For coverage reporting
+coverage>=7.0.0
+
+# Optional: For test reporting
+pytest-html>=3.1.0
+pytest-json-report>=1.5.0
