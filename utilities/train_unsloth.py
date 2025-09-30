@@ -9,9 +9,10 @@ from transformers import TrainingArguments
 
 
 ALLOWED_MODELS = {
-    "unsloth/gemma-2-9b-it",
-    "unsloth/Qwen3-8B-unsloth-bnb-4bit",
-    "unsloth/Qwen3-14B-unsloth-bnb-4bit",
+    "unsloth/gemma-2-9b-bnb-4bit",
+    "unsloth/gemma-3-12b-pt-unsloth-bnb-4bit",
+    "unsloth/Qwen3-8B",
+    "unsloth/Qwen3-14B",
 }
 
 
@@ -54,23 +55,17 @@ class UnslothFinetuner:
         )
         self.model = FastLanguageModel.get_peft_model(
             self.model,
-            r=16,
-            target_modules=[
-                "q_proj",
-                "k_proj",
-                "v_proj",
-                "o_proj",
-                "gate_proj",
-                "up_proj",
-                "down_proj",
-            ],
-            lora_alpha=16,
-            lora_dropout=0,
-            bias="none",
-            use_gradient_checkpointing="unsloth",
-            random_state=3407,
-            use_rslora=False,
-            loftq_config=None,
+            r = 32,           # Choose any number > 0! Suggested 8, 16, 32, 64, 128
+            target_modules = ["q_proj", "k_proj", "v_proj", "o_proj",
+                            "gate_proj", "up_proj", "down_proj",],
+            lora_alpha = 32,  # Best to choose alpha = rank or rank*2
+            lora_dropout = 0, # Supports any, but = 0 is optimized
+            bias = "none",    # Supports any, but = "none" is optimized
+            # [NEW] "unsloth" uses 30% less VRAM, fits 2x larger batch sizes!
+            use_gradient_checkpointing = "unsloth", # True or "unsloth" for very long context
+            random_state = 3407,
+            use_rslora = False,   # We support rank stabilized LoRA
+            loftq_config = None,  # And LoftQ
         )
 
     def _prepare_datasets(self) -> Tuple[Dataset, Dataset]:
@@ -110,8 +105,8 @@ class UnslothFinetuner:
                 per_device_train_batch_size=2,
                 gradient_accumulation_steps=4,  # Use GA to mimic batch size!
                 warmup_steps=5,
-                # num_train_epochs = 1, # Set this for 1 full training run.
-                max_steps=30,
+                num_train_epochs = self.epochs, # Set this for 1 full training run.
+                # max_steps=30,
                 learning_rate=2e-4,  # Reduce to 2e-5 for long training runs
                 logging_steps=1,
                 optim="adamw_8bit",

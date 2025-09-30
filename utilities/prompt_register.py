@@ -10,7 +10,7 @@ PII_ENTITIES_LIST = [
     "EMAIL_ADDRESS",
     "ETHNIC_GROUP",
     "GENDER",
-    "GENERIC_ID",
+    "GENERIC_IDENTIFIER",
     "GEO_COORDINATES",
     "MARITAL_STATUS",
     "MEDICAL_TERM",
@@ -78,9 +78,11 @@ sensitive_columns = [
 ]
 
 
-def is_pii(column_name, sample_values):
-    if len(sample_values) > 5:
-        sample_values = sample_values[:5]
+def is_pii(column_name, sample_values, k=5):
+    sample_values_prompt = f"Sample values: {sample_values[:k]}"
+    if k == 0:
+        sample_values_prompt = ""
+
     prompt = f"""
 ### INSTRUCTION
 You are a PII classification system. Given a column name **AND** sample values, determine if this column contains a specific type of PII.
@@ -92,10 +94,11 @@ Return ONLY the entity name or only 'None' with no additional text.
 
 ### INPUT
 Column name: {column_name}
-Sample values: {sample_values}
+{sample_values_prompt}
 
 ### RESPONSE
 """
+    # print(prompt)
     return prompt
 
 
@@ -114,11 +117,10 @@ Return ONLY the classification (NON_SENSITIVE, MEDIUM_SENSITIVE, HIGH_SENSITIVE)
 ### Input:
 Table: {table_context}
 Column name: {column_name}
-PII entity: {column_pii_entity}
+# PII entity: {column_pii_entity}
 
 ### Response:
 """
-    # print(prompt)
     return prompt
 
 
@@ -136,10 +138,10 @@ Follow these exact steps
 
 ### Input:
 ISP Rules
-SEVERE_SENSITIVE: {isp['sensitivity_rules']['SEVERE_SENSITIVE']}
-HIGH_SENSITIVE: {isp['sensitivity_rules']['HIGH_SENSITIVE']}
-MODERATE_SENSITIVE: {isp['sensitivity_rules']['MODERATE_SENSITIVE']}
-NON_SENSITIVE: {isp['sensitivity_rules']['LOW/NON_SENSITIVE']}
+SEVERE_SENSITIVE: {isp['sensitivity_rules']['SEVERE_SENSITIVE']['data and information type']}
+HIGH_SENSITIVE: {isp['sensitivity_rules']['HIGH_SENSITIVE']['data and information type']}
+MODERATE_SENSITIVE: {isp['sensitivity_rules']['MODERATE_SENSITIVE']['data and information type']}
+NON_SENSITIVE: {isp['sensitivity_rules']['LOW/NON_SENSITIVE']['data and information type']}
 
 Table:
 {table_context}
@@ -149,7 +151,7 @@ Table:
 - List with ONLY the columns that are sensitive or in combination with other columns are sensitive.
 - Cited ISP Rule(s): Quote the specific ISP rule(s) that directly support the classification. If none directly apply, explain briefly why it is NON_SENSITIVE.
 """
-    print(prompt)
+    # print(prompt)
     return prompt
 
 
@@ -177,7 +179,7 @@ Table:
 - Sensitivity Classification: <ONE OF: NON_SENSITIVE / MODERATE_SENSITIVE / HIGH_SENSITIVE / SEVERE_SENSITIVE>
 - Explain why you chose the sensitivity level.
 """
-    print(prompt)
+    # print(prompt)
     return prompt
 
 

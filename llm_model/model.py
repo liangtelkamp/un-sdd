@@ -2,11 +2,6 @@ import os
 import torch
 import logging
 from typing import Optional
-try:
-    from unsloth import FastLanguageModel
-except ImportError:
-    print("Unsloth not installed")
-
 
 
 os.environ["TRITON_LOG_LEVEL"] = "ERROR"
@@ -30,10 +25,18 @@ class Model:
     def _determine_model_type(self) -> str:
         name = self.model_name.lower()
         print(f"Name model in model.py: {name}")
-        if name in ["gpt-4o-mini", "gpt-4o"]:
+        if name in ["gpt-4o-mini", "gpt-4o", "o3", "o3-mini", "o4-mini", "gpt-4.1-2025-04-14"]:
             return "openai"
-        elif name.startswith("deepseek"):
+
+        try:
+            from unsloth import FastLanguageModel
+        except ImportError:
+            print("Unsloth not installed")
+
+        if name.startswith("deepseek"):
             return "deepseek"
+        elif "aya" in name:
+            return "aya-expanse"
         else:
             return "hf_model"
 
@@ -89,7 +92,7 @@ class Model:
             model_id = self.model_name  # Use as provided
             self.model, self.tokenizer = FastLanguageModel.from_pretrained(
                 model_name=model_id,
-                max_seq_length=4096,
+                max_seq_length=6000,
                 dtype=torch.bfloat16,
                 load_in_4bit=True,
                 load_in_8bit=False,
@@ -101,6 +104,15 @@ class Model:
 
 
     def _generate_openai(self, prompt, temperature=0.3, max_new_tokens=8):
+        if self.model_name in ["o3-mini", "o4-mini", "03"]:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_completion_tokens=max_new_tokens,
+            )
+            return response.choices[0].message.content
+
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],

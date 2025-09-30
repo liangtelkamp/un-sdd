@@ -1,8 +1,12 @@
 from utilities.utils import table_markdown
 import json
 import re
+import os
+import sys
+# Get root directory
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-with open(r"C:\Users\VN\Documents\GitHub\detecting-sensitive-data\utilities\extracted_rules.json", "r") as f:
+with open(os.path.join(root_dir, "utilities/isp_example.json"), "r") as f:
     ISP_DATA = json.load(f)
 
 
@@ -10,7 +14,8 @@ def get_isp_by_country(table_name):
     table_name = table_name.lower()
 
     for isp_name, isp_content in ISP_DATA.items():
-        location = isp_content.get("location", "").lower()
+        print(f"ISP name in get_isp_by_country: {isp_name}")
+        location = isp_content.get("country", "").lower()
         if location and re.search(rf"\\b{re.escape(location)}\\b", table_name):
             return isp_name, isp_content
 
@@ -29,12 +34,13 @@ def detect_non_pii(table_data, generator, fname, method="table"):
         table_data["metadata"] = {}
 
     # Get ISP data
+    print(f"Fname: {fname}")
     isp_name, isp_used = get_isp_by_country(fname)
     print(f"ISP used: {isp_name}")
     table_data["metadata"]["isp_used"] = isp_name
 
     # table_md = table_markdown(table_data, pii_model=generator.model_name)
-    table_md = table_markdown(table_data, pii_model=None)
+    table_md = table_markdown(table_data)
 
     if method == "column":
         if "columns" not in table_data:
@@ -87,23 +93,56 @@ def detect_non_pii(table_data, generator, fname, method="table"):
     return table_data
 
 
-def detect_and_reflect_pii(table_data, generator):
+
+def detect_pii(table_data, generator, detect_key=None, k=5, force=False):
+
+    if detect_key:
+        pii_detection_key = detect_key
+    else:
+        pii_detection_key = f"pii_detection_{generator.model_name}"
 
     for column_name, col_data in table_data["columns"].items():
         sample_values = col_data["records"]
-        # if not col_data.get(f"pii_detection_{generator.model_name}"):
-        pii_entity = generator.classify_pii(column_name, sample_values)
-        col_data[f"pii_detection_{generator.model_name}"] = pii_entity
+        if all(record is None for record in sample_values):
+            col_data[pii_detection_key] = "None"
+            continue
+        if not col_data.get(pii_detection_key) or force:
+            pii_entity = generator.classify_pii(column_name, sample_values, k=k)
+            col_data[pii_detection_key] = pii_entity
+    
+    return table_data
 
-    table_md = table_markdown(table_data, pii_model=generator.model_name)
+
+def reflect_pii(table_data, generator, detect_key=None, reflect_key=None, force=False):
+
+    if detect_key:
+        pii_detection_key = detect_key
+    else:
+        pii_detection_key = f"pii_detection_{generator.model_name}"
+
+    if reflect_key:
+        pii_reflection_key = reflect_key
+    else:
+        pii_reflection_key = f"pii_reflection_{generator.model_name}"
+
+    table_md = table_markdown(table_data, pii_key=pii_detection_key)
+
+    # If model name is directory, skip the reflection
+    if os.path.isdir(generator.model_name):
+        print(f"Model name is directory, skipping reflection for {generator.model_name}")
+        return table_data
 
     for column_name, col_data in table_data["columns"].items():
-        # if col_data.get(f"pii_reflection_{generator.model_name}") and col_data.get(f"pii_reflection_{generator.model_name}") in ['NON_SENSITIVE', 'MEDIUM_SENSITIVE', 'HIGH_SENSITIVE']:
-        #     continue
-        pii_entity = col_data[f"pii_detection_{generator.model_name}"]
-        sensitivity = generator.classify_sensitive_pii(
-            column_name, table_md, pii_entity
-        )
-        col_data[f"pii_reflection_{generator.model_name}"] = sensitivity
+        pii_entity = col_data[pii_detection_key]
+
+        if not col_data.get(pii_reflection_key) or force: # If not exists or force is True
+            if pii_entity == "None": # If no PII entity, set to NON_SENSITIVE automatically
+                col_data[pii_reflection_key] = "NON_SENSITIVE"
+                continue
+
+            sensitivity = generator.classify_sensitive_pii(
+                column_name, table_md, pii_entity
+            )
+            col_data[pii_reflection_key] = sensitivity
 
     return table_data

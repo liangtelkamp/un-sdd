@@ -221,8 +221,12 @@ class DataLoader:
         self, table_data: Dict[str, Any], table_name: str, filepath: Path
     ) -> Dict[str, Any]:
         """Enhance table data with metadata including country information."""
+        metadata_existed = "metadata" in table_data and bool(table_data["metadata"])
+        
         if "metadata" not in table_data:
             table_data["metadata"] = {}
+        else:
+            return table_data
 
         # Extract country information from filename
         country_info = fetch_country(filepath.name)
@@ -239,6 +243,7 @@ class DataLoader:
                 "processing_timestamp": datetime.now().isoformat(),
                 "total_columns": len(table_data.get("columns", {})),
                 "max_records_per_column": self.max_records_per_column,
+                "metadata_pre_existing": metadata_existed,
             }
         )
 

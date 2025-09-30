@@ -846,7 +846,7 @@ def main():
         return
 
     # Step 2: Save results
-    output_file = "extracted_rules.json"
+    output_file = "isp_example.json"
     extractor.save_extracted_rules(results, output_file)
 
 

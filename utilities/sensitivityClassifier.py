@@ -47,7 +47,7 @@ class SensitivityClassifier:
         else:
             return "No match"
 
-    def classify_pii(self, column_name, sample_values):
+    def classify_pii(self, column_name, sample_values, k=5):
         """
         Classify if a column contains PII based on its name and sample values.
 
@@ -71,7 +71,7 @@ class SensitivityClassifier:
 
         # Convert sample_values to list if not already
         sample_values_list = list(sample_values)
-        prompt = is_pii(column_name, sample_values_list)
+        prompt = is_pii(column_name, sample_values_list, k=k)
         # try:
         prediction = self.generate(prompt, max_new_tokens=128)
 
