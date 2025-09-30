@@ -24,9 +24,6 @@ from .unsloth_strategy import UnslothStrategy
 from .cohere_strategy import CohereStrategy
 from .model_factory import ModelFactory
 
-# Legacy Model class for backward compatibility
-from .model import Model
-
 __all__ = [
     "BaseLLMModel",
     "AzureOpenAIStrategy",
@@ -34,5 +31,4 @@ __all__ = [
     "UnslothStrategy",
     "CohereStrategy",
     "ModelFactory",
-    "Model",  # Legacy support
 ]
