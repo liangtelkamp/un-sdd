@@ -9,10 +9,10 @@ This module provides a strategy pattern implementation for different LLM provide
 
 Usage:
     from llm_model import ModelFactory
-    
+
     # Create model using factory
     model = ModelFactory.create_model("gpt-4o-mini")
-    
+
     # Generate text
     response = model.generate("Hello, world!")
 """
@@ -28,11 +28,11 @@ from .model_factory import ModelFactory
 from .model import Model
 
 __all__ = [
-    'BaseLLMModel',
-    'AzureOpenAIStrategy', 
-    'OpenAIStrategy',
-    'UnslothStrategy',
-    'CohereStrategy',
-    'ModelFactory',
-    'Model'  # Legacy support
+    "BaseLLMModel",
+    "AzureOpenAIStrategy",
+    "OpenAIStrategy",
+    "UnslothStrategy",
+    "CohereStrategy",
+    "ModelFactory",
+    "Model",  # Legacy support
 ]

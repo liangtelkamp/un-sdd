@@ -6,6 +6,7 @@ from typing import Optional
 
 os.environ["TRITON_LOG_LEVEL"] = "ERROR"
 
+
 class Model:
     """
     A class to handle model setup and initialization for different types of models.
@@ -25,7 +26,14 @@ class Model:
     def _determine_model_type(self) -> str:
         name = self.model_name.lower()
         print(f"Name model in model.py: {name}")
-        if name in ["gpt-4o-mini", "gpt-4o", "o3", "o3-mini", "o4-mini", "gpt-4.1-2025-04-14"]:
+        if name in [
+            "gpt-4o-mini",
+            "gpt-4o",
+            "o3",
+            "o3-mini",
+            "o4-mini",
+            "gpt-4.1-2025-04-14",
+        ]:
             return "openai"
 
         try:
@@ -63,6 +71,7 @@ class Model:
     def _setup_openai(self):
         from openai import OpenAI
         import dotenv
+
         dotenv.load_dotenv()
         self.client = OpenAI()
         logging.getLogger("openai").setLevel(logging.WARNING)
@@ -73,6 +82,7 @@ class Model:
     def _setup_deepseek(self):
         from openai import OpenAI
         import dotenv
+
         dotenv.load_dotenv()
         self.client = OpenAI()
         print("DeepSeek client (OpenAI API) initialized")
@@ -81,6 +91,7 @@ class Model:
         if self.model_type == "aya-expanse":
             # Use traditional HuggingFace for Aya Expanse
             from transformers import AutoTokenizer, AutoModelForCausalLM
+
             model_id = self.model_name  # Use as provided
             self.tokenizer = AutoTokenizer.from_pretrained(model_id)
             self.model = AutoModelForCausalLM.from_pretrained(model_id).to(self.device)
@@ -97,11 +108,10 @@ class Model:
                 load_in_4bit=True,
                 load_in_8bit=False,
             )
-            
+
             FastLanguageModel.for_inference(self.model)
             logging.info(f"Loaded Unsloth model: {model_id}")
             print(f"Loaded Unsloth model: {model_id}")
-
 
     def _generate_openai(self, prompt, temperature=0.3, max_new_tokens=8):
         if self.model_name in ["o3-mini", "o4-mini", "03"]:
@@ -127,13 +137,13 @@ class Model:
             model="deepseek-ai/DeepSeek-R1-0528",
             messages=messages,
             temperature=temperature,
-            max_tokens=5000
+            max_tokens=5000,
         )
         response = completion.choices[0].message.content.strip()
         # Remove thinking content
         index = response.find("</think>")
         if index != -1:
-            response = response[index + len("</think>"):].strip()
+            response = response[index + len("</think>") :].strip()
         return response
 
     def _generate_hf(self, prompt, max_new_tokens=8, temperature=0.3, top_p=0.95):
@@ -142,18 +152,20 @@ class Model:
         Uses options according to self.model_type.
         """
 
-        if 'aya' in self.model_name.lower():
+        if "aya" in self.model_name.lower():
             # Use chat template for Aya
             messages = [{"role": "user", "content": prompt}]
             input_ids = self.tokenizer.apply_chat_template(
                 messages, tokenize=True, add_generation_prompt=True, return_tensors="pt"
             ).to(self.device)
             input_length = input_ids.shape[1]
-            outputs = self.model.generate(input_ids, max_new_tokens=max_new_tokens, do_sample=True)
+            outputs = self.model.generate(
+                input_ids, max_new_tokens=max_new_tokens, do_sample=True
+            )
             new_tokens = outputs[0][input_length:]
             return self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
-        elif 'qwen' in self.model_name.lower():
+        elif "qwen" in self.model_name.lower():
             # Use chat template for Qwen (Unsloth)
             messages = [{"role": "user", "content": prompt}]
             text = self.tokenizer.apply_chat_template(
@@ -166,10 +178,9 @@ class Model:
 
             # conduct text completion
             generated_ids = self.model.generate(
-                **model_inputs,
-                max_new_tokens=max_new_tokens
+                **model_inputs, max_new_tokens=max_new_tokens
             )
-            output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist() 
+            output_ids = generated_ids[0][len(model_inputs.input_ids[0]) :].tolist()
 
             # parsing thinking content
             try:
@@ -179,7 +190,9 @@ class Model:
                 index = 0
 
             # thinking_content = self.tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
-            content = self.tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
+            content = self.tokenizer.decode(
+                output_ids[index:], skip_special_tokens=True
+            ).strip("\n")
             return content
 
         else:

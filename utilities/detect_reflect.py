@@ -3,6 +3,7 @@ import json
 import re
 import os
 import sys
+
 # Get root directory
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -93,7 +94,6 @@ def detect_non_pii(table_data, generator, fname, method="table"):
     return table_data
 
 
-
 def detect_pii(table_data, generator, detect_key=None, k=5, force=False):
 
     if detect_key:
@@ -109,7 +109,7 @@ def detect_pii(table_data, generator, detect_key=None, k=5, force=False):
         if not col_data.get(pii_detection_key) or force:
             pii_entity = generator.classify_pii(column_name, sample_values, k=k)
             col_data[pii_detection_key] = pii_entity
-    
+
     return table_data
 
 
@@ -129,14 +129,20 @@ def reflect_pii(table_data, generator, detect_key=None, reflect_key=None, force=
 
     # If model name is directory, skip the reflection
     if os.path.isdir(generator.model_name):
-        print(f"Model name is directory, skipping reflection for {generator.model_name}")
+        print(
+            f"Model name is directory, skipping reflection for {generator.model_name}"
+        )
         return table_data
 
     for column_name, col_data in table_data["columns"].items():
         pii_entity = col_data[pii_detection_key]
 
-        if not col_data.get(pii_reflection_key) or force: # If not exists or force is True
-            if pii_entity == "None": # If no PII entity, set to NON_SENSITIVE automatically
+        if (
+            not col_data.get(pii_reflection_key) or force
+        ):  # If not exists or force is True
+            if (
+                pii_entity == "None"
+            ):  # If no PII entity, set to NON_SENSITIVE automatically
                 col_data[pii_reflection_key] = "NON_SENSITIVE"
                 continue
 

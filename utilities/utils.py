@@ -24,9 +24,7 @@ def save_json_data(data, file_path):
         json.dump(data, file, indent=4)
 
 
-def table_markdown(
-    table_data, pii_key=None, pii_reflection_key=None, rows=5
-):
+def table_markdown(table_data, pii_key=None, pii_reflection_key=None, rows=5):
     columns_data = table_data["columns"]
     column_samples = {}
 
@@ -337,138 +335,151 @@ def evaluate_pii_detection_multiclass(
         When True, print confusion matrix.
     show_report_table: bool, optional
         When True, print classification report as a neat table.
-    
+
     Returns
     -------
     Dict with precision, recall, f1 and accuracy for each class and overall.
     """
     from sklearn.metrics import classification_report, confusion_matrix
     import numpy as np
-    
+
     y_true: List[str] = []
     y_pred: List[str] = []
     misclassifications = []
-    
+
     for table_name, table in data.items():
         for column_name, col in table.get("columns", {}).items():
             gt = col.get(ground_truth_key)
             pred = col.get(prediction_key)
             if gt is None or pred is None:
                 continue
-            
+
             y_true.append(str(gt))
             y_pred.append(str(pred))
-            
+
             if pred != gt:
                 # Get sample data from the column
                 sample_data = ""
                 if "columns" in table and column_name in table["columns"]:
                     records = table["columns"][column_name].get("records", [])
                     # Show first few non-empty records
-                    sample_records = [str(r) for r in records if r is not None and str(r).strip()][:3]
+                    sample_records = [
+                        str(r) for r in records if r is not None and str(r).strip()
+                    ][:3]
                     sample_data = ", ".join(sample_records)
                     if len(sample_records) == 3 and len(records) > 3:
                         sample_data += "..."
-                
-                misclassifications.append((table_name, column_name, gt, pred, sample_data))
-    
+
+                misclassifications.append(
+                    (table_name, column_name, gt, pred, sample_data)
+                )
+
     if not y_true:
         return {"error": "No valid ground truth and prediction pairs found"}
-    
+
     # Get all unique labels
     all_labels = sorted(list(set(y_true + y_pred)))
-    
+
     # Get classification report for all classes
-    report_all = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
-    
+    report_all = classification_report(
+        y_true, y_pred, output_dict=True, zero_division=0
+    )
+
     # Get classification report excluding "None" for macro/weighted averages
-    pii_labels = [label for label in all_labels if label.lower() not in ['none', 'non_sensitive']]
-    
+    pii_labels = [
+        label for label in all_labels if label.lower() not in ["none", "non_sensitive"]
+    ]
+
     if pii_labels:
         report_pii = classification_report(
-            y_true, y_pred, 
-            labels=pii_labels, 
-            output_dict=True, 
-            zero_division=0
+            y_true, y_pred, labels=pii_labels, output_dict=True, zero_division=0
         )
         macro_avg_pii = report_pii["macro avg"]
         weighted_avg_pii = report_pii["weighted avg"]
     else:
         macro_avg_pii = {"precision": 0, "recall": 0, "f1-score": 0, "support": 0}
         weighted_avg_pii = {"precision": 0, "recall": 0, "f1-score": 0, "support": 0}
-    
+
     # Display classification report as table
     if show_report_table:
         print("\n### Classification Report")
         table_data = []
         headers = ["Class", "Precision", "Recall", "F1-Score", "Support"]
-        
+
         for class_name, metrics in report_all.items():
             if class_name in ["accuracy", "macro avg", "weighted avg"]:
                 continue
             if isinstance(metrics, dict):
-                table_data.append([
-                    class_name,
-                    f"{metrics['precision']:.3f}",
-                    f"{metrics['recall']:.3f}",
-                    f"{metrics['f1-score']:.3f}",
-                    f"{metrics['support']:.0f}"
-                ])
-        
+                table_data.append(
+                    [
+                        class_name,
+                        f"{metrics['precision']:.3f}",
+                        f"{metrics['recall']:.3f}",
+                        f"{metrics['f1-score']:.3f}",
+                        f"{metrics['support']:.0f}",
+                    ]
+                )
+
         # Add summary rows (excluding "None" from macro/weighted averages)
         table_data.append(["", "", "", "", ""])  # Empty row
-        table_data.append([
-            "macro avg (PII only)",
-            f"{macro_avg_pii['precision']:.3f}",
-            f"{macro_avg_pii['recall']:.3f}",
-            f"{macro_avg_pii['f1-score']:.3f}",
-            f"{macro_avg_pii['support']:.0f}"
-        ])
-        table_data.append([
-            "weighted avg (PII only)",
-            f"{weighted_avg_pii['precision']:.3f}",
-            f"{weighted_avg_pii['recall']:.3f}",
-            f"{weighted_avg_pii['f1-score']:.3f}",
-            f"{weighted_avg_pii['support']:.0f}"
-        ])
-        
+        table_data.append(
+            [
+                "macro avg (PII only)",
+                f"{macro_avg_pii['precision']:.3f}",
+                f"{macro_avg_pii['recall']:.3f}",
+                f"{macro_avg_pii['f1-score']:.3f}",
+                f"{macro_avg_pii['support']:.0f}",
+            ]
+        )
+        table_data.append(
+            [
+                "weighted avg (PII only)",
+                f"{weighted_avg_pii['precision']:.3f}",
+                f"{weighted_avg_pii['recall']:.3f}",
+                f"{weighted_avg_pii['f1-score']:.3f}",
+                f"{weighted_avg_pii['support']:.0f}",
+            ]
+        )
+
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
         print(f"\nOverall Accuracy: {report_all['accuracy']:.3f}")
         print(f"Total Samples: {len(y_true)}")
         print(f"Total Misclassifications: {len(misclassifications)}")
-        
+
         if pii_labels:
-            print(f"PII Classes (excluded from macro avg): {', '.join([label for label in all_labels if label.lower() in ['none', 'non_sensitive']])}")
+            print(
+                f"PII Classes (excluded from macro avg): {', '.join([label for label in all_labels if label.lower() in ['none', 'non_sensitive']])}"
+            )
             print(f"PII Classes (included in macro avg): {', '.join(pii_labels)}")
-    
+
     # Get confusion matrix
     if show_confusion_matrix:
         cm = confusion_matrix(y_true, y_pred)
         labels = sorted(list(set(y_true + y_pred)))
         print("\n### Confusion Matrix")
-        
+
         # Create confusion matrix table
         cm_table = []
         headers = ["True \\ Predicted"] + labels
-        
+
         for i, true_label in enumerate(labels):
             row = [true_label] + [str(cm[i][j]) for j in range(len(labels))]
             cm_table.append(row)
-        
+
         print(tabulate(cm_table, headers=headers, tablefmt="grid"))
-    
+
     # Show misclassifications
     if show_misclassifications and misclassifications:
         print(f"\n### Misclassifications ({len(misclassifications)} cases)")
-        
+
         fp_data = []
         headers = ["Table", "Column", "True Class", "Predicted Class", "Sample Values"]
-        
+
         for table_name, column_name, gt, pred, sample_data in misclassifications:
             fp_data.append([table_name, column_name, gt, pred, sample_data])
-        
+
         print(tabulate(fp_data, headers=headers, tablefmt="grid"))
-    
+
     return {
         "classification_report": report_all,
         "overall_accuracy": report_all["accuracy"],
@@ -476,12 +487,17 @@ def evaluate_pii_detection_multiclass(
         "weighted_avg_all": report_all["weighted avg"],
         "macro_avg_pii_only": macro_avg_pii,
         "weighted_avg_pii_only": weighted_avg_pii,
-        "per_class_metrics": {k: v for k, v in report_all.items() 
-                           if k not in ["accuracy", "macro avg", "weighted avg"]},
+        "per_class_metrics": {
+            k: v
+            for k, v in report_all.items()
+            if k not in ["accuracy", "macro avg", "weighted avg"]
+        },
         "total_samples": len(y_true),
         "misclassifications": len(misclassifications),
         "pii_classes": pii_labels,
-        "excluded_classes": [label for label in all_labels if label.lower() in ['none', 'non_sensitive']]
+        "excluded_classes": [
+            label for label in all_labels if label.lower() in ["none", "non_sensitive"]
+        ],
     }
 
 
@@ -495,7 +511,7 @@ def evaluate_pii_reflection_binary(
     show_report_table: bool = True,
 ) -> Dict:
     """Evaluate PII reflection results with binary classification.
-    
+
     Groups NON_SENSITIVE vs (MEDIUM_SENSITIVE + HIGH_SENSITIVE).
 
     Parameters
@@ -512,7 +528,7 @@ def evaluate_pii_reflection_binary(
         When True, print false negative examples.
     show_report_table: bool, optional
         When True, print classification report as a neat table.
-    
+
     Returns
     -------
     Dict with precision, recall, f1 and accuracy for binary classification.
@@ -521,7 +537,7 @@ def evaluate_pii_reflection_binary(
     y_pred: List[int] = []
     fps = []
     fns = []
-    
+
     def map_to_binary(value: str) -> int:
         """Map sensitivity values to binary: 0 for NON_SENSITIVE, 1 for others."""
         if value == "NON_SENSITIVE":
@@ -531,31 +547,33 @@ def evaluate_pii_reflection_binary(
         else:
             # Handle other possible values by treating them as sensitive
             return 1
-    
+
     for table_name, table in data.items():
         for column_name, col in table.get("columns", {}).items():
             gt = col.get(ground_truth_key)
             pred = col.get(prediction_key)
             if gt is None or pred is None:
                 continue
-            
+
             gt_bin = map_to_binary(str(gt))
             pred_bin = map_to_binary(str(pred))
-            
+
             y_true.append(gt_bin)
             y_pred.append(pred_bin)
-            
+
             if pred_bin == 1 and gt_bin == 0:
                 # Get sample data from the column
                 sample_data = ""
                 if "columns" in table and column_name in table["columns"]:
                     records = table["columns"][column_name].get("records", [])
                     # Show first few non-empty records
-                    sample_records = [str(r) for r in records if r is not None and str(r).strip()][:3]
+                    sample_records = [
+                        str(r) for r in records if r is not None and str(r).strip()
+                    ][:3]
                     sample_data = ", ".join(sample_records)
                     if len(sample_records) == 3 and len(records) > 3:
                         sample_data += "..."
-                
+
                 fps.append((table_name, column_name, gt, pred, sample_data))
             elif pred_bin == 0 and gt_bin == 1:
                 # Get sample data from the column
@@ -563,99 +581,141 @@ def evaluate_pii_reflection_binary(
                 if "columns" in table and column_name in table["columns"]:
                     records = table["columns"][column_name].get("records", [])
                     # Show first few non-empty records
-                    sample_records = [str(r) for r in records if r is not None and str(r).strip()][:3]
+                    sample_records = [
+                        str(r) for r in records if r is not None and str(r).strip()
+                    ][:3]
                     sample_data = ", ".join(sample_records)
                     if len(sample_records) == 3 and len(records) > 3:
                         sample_data += "..."
-                
+
                 fns.append((table_name, column_name, gt, pred, sample_data))
-    
+
     if not y_true:
         return {"error": "No valid ground truth and prediction pairs found"}
-    
+
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_true, y_pred, average="binary", zero_division=0
     )
     acc = accuracy_score(y_true, y_pred)
-    
+
     # Calculate per-class metrics
-    precision_per_class, recall_per_class, f1_per_class, support_per_class = precision_recall_fscore_support(
-        y_true, y_pred, average=None, zero_division=0
+    precision_per_class, recall_per_class, f1_per_class, support_per_class = (
+        precision_recall_fscore_support(y_true, y_pred, average=None, zero_division=0)
     )
-    
+
     # Display results as table
     if show_report_table:
         print("\n### Binary Classification Report")
         table_data = []
         headers = ["Class", "Precision", "Recall", "F1-Score", "Support"]
-        
+
         # Non-sensitive class
-        table_data.append([
-            "NON_SENSITIVE",
-            f"{precision_per_class[0]:.3f}" if len(precision_per_class) > 0 else "0.000",
-            f"{recall_per_class[0]:.3f}" if len(recall_per_class) > 0 else "0.000",
-            f"{f1_per_class[0]:.3f}" if len(f1_per_class) > 0 else "0.000",
-            f"{support_per_class[0]:.0f}" if len(support_per_class) > 0 else "0"
-        ])
-        
+        table_data.append(
+            [
+                "NON_SENSITIVE",
+                (
+                    f"{precision_per_class[0]:.3f}"
+                    if len(precision_per_class) > 0
+                    else "0.000"
+                ),
+                f"{recall_per_class[0]:.3f}" if len(recall_per_class) > 0 else "0.000",
+                f"{f1_per_class[0]:.3f}" if len(f1_per_class) > 0 else "0.000",
+                f"{support_per_class[0]:.0f}" if len(support_per_class) > 0 else "0",
+            ]
+        )
+
         # Sensitive class
-        table_data.append([
-            "SENSITIVE",
-            f"{precision_per_class[1]:.3f}" if len(precision_per_class) > 1 else "0.000",
-            f"{recall_per_class[1]:.3f}" if len(recall_per_class) > 1 else "0.000",
-            f"{f1_per_class[1]:.3f}" if len(f1_per_class) > 1 else "0.000",
-            f"{support_per_class[1]:.0f}" if len(support_per_class) > 1 else "0"
-        ])
-        
+        table_data.append(
+            [
+                "SENSITIVE",
+                (
+                    f"{precision_per_class[1]:.3f}"
+                    if len(precision_per_class) > 1
+                    else "0.000"
+                ),
+                f"{recall_per_class[1]:.3f}" if len(recall_per_class) > 1 else "0.000",
+                f"{f1_per_class[1]:.3f}" if len(f1_per_class) > 1 else "0.000",
+                f"{support_per_class[1]:.0f}" if len(support_per_class) > 1 else "0",
+            ]
+        )
+
         # Add summary row
         table_data.append(["", "", "", "", ""])  # Empty row
-        table_data.append([
-            "Overall",
-            f"{precision:.3f}",
-            f"{recall:.3f}",
-            f"{f1:.3f}",
-            f"{len(y_true)}"
-        ])
-        
+        table_data.append(
+            [
+                "Overall",
+                f"{precision:.3f}",
+                f"{recall:.3f}",
+                f"{f1:.3f}",
+                f"{len(y_true)}",
+            ]
+        )
+
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
         # print(f"\nOverall Accuracy: {acc:.3f}")
-        
+
         # Class distribution table
         non_sensitive_count = sum(1 for x in y_true if x == 0)
         sensitive_count = sum(1 for x in y_true if x == 1)
-        
+
         print("\n### Class Distribution")
         dist_table = [
-            ["NON_SENSITIVE", non_sensitive_count, f"{non_sensitive_count/len(y_true)*100:.1f}%"],
+            [
+                "NON_SENSITIVE",
+                non_sensitive_count,
+                f"{non_sensitive_count/len(y_true)*100:.1f}%",
+            ],
             ["SENSITIVE", sensitive_count, f"{sensitive_count/len(y_true)*100:.1f}%"],
-            ["Total", len(y_true), "100.0%"]
+            ["Total", len(y_true), "100.0%"],
         ]
-        print(tabulate(dist_table, headers=["Class", "Count", "Percentage"], tablefmt="grid"))
-    
+        print(
+            tabulate(
+                dist_table, headers=["Class", "Count", "Percentage"], tablefmt="grid"
+            )
+        )
+
     if show_fps and fps:
         print(f"\n### False Positives ({len(fps)} cases)")
         print("NON_SENSITIVE data incorrectly predicted as SENSITIVE")
-        fp_data = [(tname, cname, gt, pred, sample_data) for tname, cname, gt, pred, sample_data in fps]
+        fp_data = [
+            (tname, cname, gt, pred, sample_data)
+            for tname, cname, gt, pred, sample_data in fps
+        ]
         print(
             tabulate(
                 fp_data,
-                headers=["Table", "Column", "Ground Truth", "Prediction", "Sample Values"],
+                headers=[
+                    "Table",
+                    "Column",
+                    "Ground Truth",
+                    "Prediction",
+                    "Sample Values",
+                ],
                 tablefmt="grid",
             )
         )
-    
+
     if show_fns and fns:
         print(f"\n### False Negatives ({len(fns)} cases)")
         print("SENSITIVE data incorrectly predicted as NON_SENSITIVE")
-        fn_data = [(tname, cname, gt, pred, sample_data) for tname, cname, gt, pred, sample_data in fns]
+        fn_data = [
+            (tname, cname, gt, pred, sample_data)
+            for tname, cname, gt, pred, sample_data in fns
+        ]
         print(
             tabulate(
                 fn_data,
-                headers=["Table", "Column", "Ground Truth", "Prediction", "Sample Values"],
+                headers=[
+                    "Table",
+                    "Column",
+                    "Ground Truth",
+                    "Prediction",
+                    "Sample Values",
+                ],
                 tablefmt="grid",
             )
         )
-    
+
     return {
         "precision": precision,
         "recall": recall,
@@ -663,25 +723,29 @@ def evaluate_pii_reflection_binary(
         "accuracy": acc,
         "per_class": {
             "non_sensitive": {
-                "precision": precision_per_class[0] if len(precision_per_class) > 0 else 0,
+                "precision": (
+                    precision_per_class[0] if len(precision_per_class) > 0 else 0
+                ),
                 "recall": recall_per_class[0] if len(recall_per_class) > 0 else 0,
                 "f1": f1_per_class[0] if len(f1_per_class) > 0 else 0,
                 "support": support_per_class[0] if len(support_per_class) > 0 else 0,
             },
             "sensitive": {
-                "precision": precision_per_class[1] if len(precision_per_class) > 1 else 0,
+                "precision": (
+                    precision_per_class[1] if len(precision_per_class) > 1 else 0
+                ),
                 "recall": recall_per_class[1] if len(recall_per_class) > 1 else 0,
                 "f1": f1_per_class[1] if len(f1_per_class) > 1 else 0,
                 "support": support_per_class[1] if len(support_per_class) > 1 else 0,
-            }
+            },
         },
         "total_samples": len(y_true),
         "class_distribution": {
             "non_sensitive": sum(1 for x in y_true if x == 0),
-            "sensitive": sum(1 for x in y_true if x == 1)
+            "sensitive": sum(1 for x in y_true if x == 1),
         },
         "false_positives": len(fps),
-        "false_negatives": len(fns)
+        "false_negatives": len(fns),
     }
 
 
@@ -690,12 +754,10 @@ def evaluate_pii_as_reflection(
     ground_truth_key: str,
     prediction_key: str,
 ) -> Dict:
-    """Evaluate PII detection results where we consider each PII as sensitive.
-
-    """
+    """Evaluate PII detection results where we consider each PII as sensitive."""
     y_true: List[str] = []
     y_pred: List[str] = []
-    
+
     for table_name, table in data.items():
         for column_name, col in table.get("columns", {}).items():
             gt = col.get(ground_truth_key)
@@ -707,16 +769,16 @@ def evaluate_pii_as_reflection(
                 y_true.append(0)
             elif gt == "MEDIUM_SENSITIVE" or gt == "HIGH_SENSITIVE":
                 y_true.append(1)
-            
+
             if pred == "None":
                 y_pred.append(0)
             else:
                 y_pred.append(1)
-    
+
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_true, y_pred, average="binary", labels=[0, 1], zero_division=0
     )
-    
+
     return {
         "precision": precision,
         "recall": recall,
@@ -724,8 +786,8 @@ def evaluate_pii_as_reflection(
         "total_samples": len(y_true),
         "class_distribution": {
             "non_sensitive": sum(1 for x in y_true if x == 0),
-            "sensitive": sum(1 for x in y_true if x == 1)
-        }
+            "sensitive": sum(1 for x in y_true if x == 1),
+        },
     }
 
 

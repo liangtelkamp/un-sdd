@@ -222,7 +222,7 @@ class DataLoader:
     ) -> Dict[str, Any]:
         """Enhance table data with metadata including country information."""
         metadata_existed = "metadata" in table_data and bool(table_data["metadata"])
-        
+
         if "metadata" not in table_data:
             table_data["metadata"] = {}
         else:
