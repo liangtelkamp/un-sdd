@@ -1,14 +1,8 @@
 # Core ML and Data Science Libraries
-torch>=2.0.0
-transformers>=4.35.0
 datasets>=2.14.0
 numpy>=1.24.0
 pandas>=2.0.0
 scikit-learn>=1.3.0
-
-# Fine-tuning and Training
-unsloth>=2024.3.0
-trl>=0.7.0
 
 # API Clients
 openai>=1.0.0
@@ -29,12 +23,3 @@ beautifulsoup4>=4.12.0
 
 # Development and Logging
 logging>=0.4.9.6
-
-# Jupyter and Notebook Support (optional but recommended)
-jupyter>=1.0.0
-ipykernel>=6.25.0
-notebook>=6.5.4
-
-# Additional utilities that may be needed
-pathlib2>=2.3.7; python_version < '3.8'
-typing-extensions>=4.7.0; python_version < '3.9'
