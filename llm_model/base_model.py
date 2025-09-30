@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional, Any, Dict
-import torch
 import logging
+# import torch
 
 
 class BaseLLMModel(ABC):
@@ -12,7 +12,8 @@ class BaseLLMModel(ABC):
 
     def __init__(self, model_name: str, device: Optional[str] = None, **kwargs):
         self.model_name = model_name
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = "cpu"
         self.model = None
         self.tokenizer = None
         self.client = None
