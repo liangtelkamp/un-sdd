@@ -1,0 +1,10 @@
+Table:
+{{ table_context }}
+
+Information Sharing Protocols (ISP):
+Sensitivity Level NON_SENSITIVE: {{ isp.sensitivity_rules['LOW/NON_SENSITIVE'] }}
+Sensitivity Level MODERATE_SENSITIVE: {{ isp.sensitivity_rules.MODERATE_SENSITIVE }}
+Sensitivity Level HIGH_SENSITIVE: {{ isp.sensitivity_rules.HIGH_SENSITIVE }}
+Sensitivity Level SEVERE_SENSITIVE: {{ isp.sensitivity_rules.SEVERE_SENSITIVE }}
+
+Is the table really {{ classification }} according to rules of the ISP? If not, then give the correct sensitivity level.

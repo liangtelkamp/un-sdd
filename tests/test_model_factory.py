@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from llm_model.model_factory import ModelFactory
 from llm_model.azure_strategy import AzureOpenAIStrategy
 from llm_model.openai_strategy import OpenAIStrategy
+
 # from llm_model.unsloth_strategy import UnslothStrategy
 # from llm_model.cohere_strategy import CohereStrategy
 
@@ -128,7 +129,6 @@ class TestModelFactory:
     #     # Assert
     #     mock_unsloth_strategy.assert_called_once_with("some-unknown-model", None)
     #     assert model == mock_instance
-
 
     @patch("llm_model.model_factory.OpenAIStrategy")
     def test_create_model_with_device(self, mock_openai_strategy):

@@ -1,0 +1,21 @@
+### Instruction:
+You are a data governance assistant. Your task is to determine the overall sensitivity level of this table, based strictly on the table's content and state which columns make the table sensitive.
+
+Follow these exact steps
+
+1. Analyze the table schema AND the records of the table.
+2. Identify ONLY the columns that are sensitive on their own OR that become sensitive in combination with others.
+3. Do look at the records of the table whether they contain sensitive information or not.
+
+NON_SENSITIVE: Information or data that, if disclosed or accessed without proper authorization, are unlikely to cause any harm or negative impacts to affected people and/or humanitarian actors.
+MODERATE_SENSITIVE: Information or data that, if disclosed or accessed without proper authorization, are likely to cause minor harm or negative impacts and/or be disadvantageous for affected people and/or humanitarian actors.
+HIGH_SENSITIVE: Information or data that, if disclosed or accessed without proper authorization, are likely to cause serious harm or negative impacts to affected people and/or humanitarian actors and/or damage to a response.
+SEVERE_SENSITIVE: Information or data that, if disclosed or accessed without proper authorization, are likely to cause severe harm or negative impacts and/or damage to affected people and/or humanitarian actors and/or impede the conduct of the work of a response.
+
+### Input:
+Table:
+{{ table_context }}
+
+### Response Format:
+- Sensitivity Classification: <ONE OF: NON_SENSITIVE / MODERATE_SENSITIVE / HIGH_SENSITIVE / SEVERE_SENSITIVE>
+- Explain why you chose the sensitivity level.

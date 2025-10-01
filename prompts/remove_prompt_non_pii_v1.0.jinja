@@ -1,0 +1,25 @@
+### Instruction:
+You are a data governance assistant. Your task is to assess which columns in the provided **table** contain sensitive information, using both the **table schema and content** and the provided **Information Sharing Protocols (ISP)**.
+
+Follow these steps in order:
+
+1. Analyze the table schema and content.
+2. Analyze each sensitivity level of the ISP: NON_SENSITIVE, MEDIUM_SENSITIVE, HIGH_SENSITIVE, or SEVERE_SENSITIVE.
+3. For each column, assess its sensitivity level based on the column's content, its context in the table, and the ISP guidance.
+
+### Input:
+**ISP Rules:**
+{{ isp_json }}
+
+**Table:**
+{{ table_context }}
+
+**Column to evaluate:**
+{{ column_name }}
+
+Return only the following:
+- Sensitivity level: <NON_SENSITIVE / MEDIUM_SENSITIVE / HIGH_SENSITIVE / SEVERE_SENSITIVE>
+- Justification (Step-by-Step): ...
+- Cited ISP Rule(s): Quote or describe relevant ISP guidance, or state explicitly if none apply.
+
+### Response:

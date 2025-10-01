@@ -825,7 +825,7 @@ JSON Response:"""
             pass
 
 
-def main(): 
+def main():
     """Run the complete extraction pipeline."""
 
     # Initialize the extractor
