@@ -1,72 +1,75 @@
 """
-Pytest configuration and shared fixtures for LLM Model tests.
-
-This module provides common fixtures and configuration for all test modules.
+Test configuration and fixtures for the classifier test suite.
 """
-
 import pytest
-import os
-import sys
-from unittest.mock import Mock, patch
-from typing import Dict, Any
-
-# Add the parent directory to the path to import the llm_model module
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from unittest.mock import Mock, patch, MagicMock
+from classifiers.pii_classifier import PIIClassifier
+from classifiers.pii_reflection_classifier import PIIReflectionClassifier
+from classifiers.non_pii_classifier import NonPIIClassifier
 
 
 @pytest.fixture
-def mock_azure_config() -> Dict[str, str]:
-    """Mock Azure configuration for testing."""
+def mock_pii_entities_list():
+    """Mock PII entities list for deterministic testing."""
+    return ["EMAIL", "NAME", "AGE"]
+
+
+@pytest.fixture
+def pii_classifier():
+    """Create a PIIClassifier instance for testing."""
+    return PIIClassifier("gpt-4o-mini")
+
+
+@pytest.fixture
+def pii_sensitivity_classifier():
+    """Create a PIIReflectionClassifier instance for testing."""
+    return PIIReflectionClassifier("gpt-4o-mini")
+
+
+@pytest.fixture
+def non_pii_classifier():
+    """Create a NonPIIClassifier instance for testing."""
+    return NonPIIClassifier("gpt-4o-mini")
+
+
+@pytest.fixture
+def mock_run_prompt():
+    """Mock the _run_prompt method to avoid hitting real LLMs."""
+    with patch('classifiers.base_classifier.BaseClassifier._run_prompt') as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_standardize_output():
+    """Mock the _standardize_output method."""
+    with patch('classifiers.base_classifier.BaseClassifier._standardize_output') as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_map_sensitivity():
+    """Mock the _map_sensitivity method."""
+    with patch('classifiers.base_classifier.BaseClassifier._map_sensitivity') as mock:
+        yield mock
+
+
+@pytest.fixture
+def sample_standardized_output():
+    """Sample standardized output for testing."""
     return {
-        "azure_endpoint": "https://test-openai.openai.azure.com/",
-        "api_key": "test-api-key-12345",
-        "api_version": "2024-02-15-preview",
+        "classification_type": "pii_detection",
+        "value": "EMAIL",
+        "raw_model_output": "This appears to be an email address",
+        "success": True
     }
 
 
 @pytest.fixture
-def mock_openai_config() -> Dict[str, str]:
-    """Mock OpenAI configuration for testing."""
-    return {"api_key": "test-openai-key-12345"}
-
-
-@pytest.fixture
-def mock_unsloth_config() -> Dict[str, Any]:
-    """Mock Unsloth configuration for testing."""
-    return {"max_seq_length": 6000, "load_in_4bit": True, "load_in_8bit": False}
-
-
-@pytest.fixture
-def mock_openai_response() -> Mock:
-    """Mock OpenAI API response."""
-    mock_response = Mock()
-    mock_choice = Mock()
-    mock_choice.message.content = "This is a test response from OpenAI"
-    mock_response.choices = [mock_choice]
-    return mock_response
-
-
-@pytest.fixture
-def mock_environment_variables():
-    """Mock environment variables for testing."""
+def sample_error_output():
+    """Sample error output for testing."""
     return {
-        "OPENAI_API_KEY": "test-openai-key",
-        "AZURE_OPENAI_ENDPOINT": "https://test-azure.openai.azure.com/",
-        "AZURE_OPENAI_API_KEY": "test-azure-key",
-        "AZURE_OPENAI_API_VERSION": "2024-02-15-preview",
+        "classification_type": "pii_detection",
+        "value": "UNDETERMINED",
+        "raw_model_output": "Error occurred during processing",
+        "success": False
     }
-
-
-@pytest.fixture(autouse=True)
-def setup_test_environment(mock_environment_variables):
-    """Setup test environment with mocked environment variables."""
-    with patch.dict(os.environ, mock_environment_variables):
-        yield
-
-
-@pytest.fixture
-def mock_torch():
-    """Mock torch module for testing."""
-    with patch("torch.cuda.is_available", return_value=True) as mock_cuda:
-        with patch("torch.bfloat16") as mock_dtype:
-            yield mock_cuda, mock_dtype

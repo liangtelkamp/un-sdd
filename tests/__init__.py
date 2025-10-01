@@ -1,6 +1,3 @@
 """
-Test package for LLM Model Strategy Pattern
-
-This package contains comprehensive tests for all model strategies
-including Azure OpenAI, OpenAI, Unsloth, and CohereLabs strategies.
+Test package for the classifier modules.
 """
