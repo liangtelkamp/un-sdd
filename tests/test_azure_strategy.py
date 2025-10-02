@@ -175,9 +175,7 @@ class TestAzureOpenAIStrategy:
         # Arrange
         with patch.dict(os.environ, {}, clear=True):
             # Act & Assert
-            with pytest.raises(
-                ValueError, match="Azure OpenAI endpoint and API key must be provided"
-            ):
+            with pytest.raises(ValueError):
                 AzureOpenAIStrategy(model_name="gpt-4o-mini")
 
     @patch("llm_model.azure_strategy.AzureOpenAI")

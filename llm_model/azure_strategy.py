@@ -13,9 +13,16 @@ class AzureOpenAIStrategy(BaseLLMModel):
 
     def __init__(self, model_name: str, device: Optional[str] = None, **kwargs):
         # Azure-specific configuration
-        self.azure_endpoint = kwargs.get("azure_endpoint")
-        self.api_version = kwargs.get("api_version", "2024-02-15-preview")
-        self.api_key = kwargs.get("api_key")
+        self.azure_endpoint = kwargs.get("azure_endpoint") or os.getenv("AZURE_OPENAI_ENDPOINT")
+        self.api_version    = kwargs.get("api_version")    or os.getenv("AZURE_OPENAI_API_VERSION")
+        self.api_key        = kwargs.get("api_key")        or os.getenv("AZURE_OPENAI_API_KEY")
+
+        print(self.azure_endpoint, self.api_key, self.api_version)
+        if not self.azure_endpoint or not self.api_key:
+            raise ValueError(
+                "Missing Azure OpenAI configuration. Please provide either kwargs "
+                "or set AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in environment variables."
+            )
 
         super().__init__(model_name, device, **kwargs)
 
