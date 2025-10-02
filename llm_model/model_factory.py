@@ -34,9 +34,7 @@ class ModelFactory:
             "o4-mini",
             "gpt-4.1-2025-04-14",
         ]:
-            # Check if Azure configuration is provided
-            if kwargs.get("azure_endpoint") or kwargs.get("api_key"):
-                return AzureOpenAIStrategy(model_name, device, **kwargs)
+            return AzureOpenAIStrategy(model_name, device, **kwargs)
 
     @staticmethod
     def get_supported_models() -> Dict[str, list]:
