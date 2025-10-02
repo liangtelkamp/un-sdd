@@ -25,7 +25,6 @@ def example_factory_usage():
         print(f"OpenAI Error: {e}")
 
 
-
 def example_direct_strategy_usage():
     """Example using strategies directly."""
     print("\n=== Direct Strategy Usage ===")

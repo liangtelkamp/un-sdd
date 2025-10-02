@@ -24,12 +24,18 @@ class SensitivityClassifier:
     # 🔹 Helper Methods
     # -----------------------
 
-    def _standardize_output(self, classification_type, value, raw_model_output, success=True):
+    def _standardize_output(
+        self, classification_type, value, raw_model_output, success=True
+    ):
         """Returns a standardized output dict for all classification methods."""
         return {
             "classification_type": classification_type,
             "value": value,
-            "raw_model_output": raw_model_output.strip() if isinstance(raw_model_output, str) else raw_model_output,
+            "raw_model_output": (
+                raw_model_output.strip()
+                if isinstance(raw_model_output, str)
+                else raw_model_output
+            ),
             "success": success,
         }
 
@@ -71,9 +77,7 @@ class SensitivityClassifier:
 
         # Render and run prompt
         prompt = self.prompt_manager.get_prompt(
-            prompt_name="pii_detection",
-            version=version,
-            context=jinja_context
+            prompt_name="pii_detection", version=version, context=jinja_context
         )
         prediction = self.generate(prompt, max_new_tokens=128).strip()
 
@@ -91,27 +95,31 @@ class SensitivityClassifier:
             if entity.lower() in prediction_lower:
                 return self._standardize_output("PII", entity, prediction)
 
-        return self._standardize_output("PII", "UNDETERMINED", prediction, success=False)
+        return self._standardize_output(
+            "PII", "UNDETERMINED", prediction, success=False
+        )
 
     # -----------------------
     # 🧠 PII Sensitivity Reflection
     # -----------------------
 
-    def classify_sensitive_pii(self, column_name, context, pii_entity, max_new_tokens=128, version="v0"):
+    def classify_sensitive_pii(
+        self, column_name, context, pii_entity, max_new_tokens=128, version="v0"
+    ):
         """Classify sensitivity of detected PII."""
         if pii_entity == "None":
-            return self._standardize_output("PII_SENSITIVITY", "NON_SENSITIVE", "PII Entity = None")
+            return self._standardize_output(
+                "PII_SENSITIVITY", "NON_SENSITIVE", "PII Entity = None"
+            )
 
         jinja_context = {
             "column_name": column_name,
             "context": context,
-            "pii_entity": pii_entity
+            "pii_entity": pii_entity,
         }
 
         prompt = self.prompt_manager.get_prompt(
-            prompt_name="pii_reflection",
-            version=version,
-            context=jinja_context
+            prompt_name="pii_reflection", version=version, context=jinja_context
         )
         prediction = self.generate(prompt, max_new_tokens=max_new_tokens).strip()
 
@@ -125,13 +133,17 @@ class SensitivityClassifier:
         else:
             value = "UNDETERMINED"
 
-        return self._standardize_output("PII_SENSITIVITY", value, prediction, success=(value != "UNDETERMINED"))
+        return self._standardize_output(
+            "PII_SENSITIVITY", value, prediction, success=(value != "UNDETERMINED")
+        )
 
     # -----------------------
     # 🧠 Non-PII Table Sensitivity
     # -----------------------
 
-    def classify_sensitive_non_pii_table(self, table_context, isp=None, max_new_tokens=512):
+    def classify_sensitive_non_pii_table(
+        self, table_context, isp=None, max_new_tokens=512
+    ):
         """Classify sensitivity level of non-PII tables."""
         try:
             context = {
@@ -140,14 +152,16 @@ class SensitivityClassifier:
             }
 
             prompt = self.prompt_manager.get_prompt(
-                prompt_name="non_pii_detection",
-                version="v0",
-                context=context
+                prompt_name="non_pii_detection", version="v0", context=context
             )
             prediction = self.generate(prompt, max_new_tokens=max_new_tokens)
             sensitivity_level = self._extract_sensitivity_level(prediction)
 
-            return self._standardize_output("NON_PII_SENSITIVITY", sensitivity_level, prediction)
+            return self._standardize_output(
+                "NON_PII_SENSITIVITY", sensitivity_level, prediction
+            )
 
         except Exception as e:
-            return self._standardize_output("NON_PII_SENSITIVITY", "ERROR_GENERATION", str(e), success=False)
+            return self._standardize_output(
+                "NON_PII_SENSITIVITY", "ERROR_GENERATION", str(e), success=False
+            )

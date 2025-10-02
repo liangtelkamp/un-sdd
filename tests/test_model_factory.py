@@ -42,7 +42,7 @@ class TestModelFactoryIntegration:
         """Test that factory correctly maps model names to strategies."""
         # Test OpenAI models
         azure_models = ["gpt-4o-mini", "gpt-4o", "o3", "o3-mini", "o4-mini"]
-        
+
         # Test Azure models (with config)
         azure_config = {"azure_endpoint": "https://test.azure.com/", "api_key": "test"}
         for model in azure_models:

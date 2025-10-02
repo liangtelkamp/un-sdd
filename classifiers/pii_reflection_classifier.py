@@ -44,4 +44,6 @@ class PIIReflectionClassifier(BaseClassifier):
             )
         except Exception as e:
             logger.exception("PII sensitivity classification failed")
-            return self._standardize_output("PII_SENSITIVITY", "ERROR_GENERATION", str(e), success=False)
+            return self._standardize_output(
+                "PII_SENSITIVITY", "ERROR_GENERATION", str(e), success=False
+            )

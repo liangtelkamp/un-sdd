@@ -32,4 +32,6 @@ class NonPIIClassifier(BaseClassifier):
             )
         except Exception as e:
             logger.exception("Non-PII table sensitivity classification failed")
-            return self._standardize_output("NON_PII_SENSITIVITY", "ERROR_GENERATION", str(e), success=False)
+            return self._standardize_output(
+                "NON_PII_SENSITIVITY", "ERROR_GENERATION", str(e), success=False
+            )

@@ -15,7 +15,7 @@ from .pii_reflection_classifier import PIIReflectionClassifier
 
 __all__ = [
     "BaseClassifier",
-    "PIIClassifier", 
+    "PIIClassifier",
     "NonPIIClassifier",
     "PIIReflectionClassifier",
 ]
