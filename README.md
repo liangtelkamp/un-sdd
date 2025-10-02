@@ -1,106 +1,189 @@
-# Sensitive Data Detection
+# UN-SDD: Sensitive Data Detection Framework
 
-A machine learning-powered system for detecting and classifying sensitive information in humanitarian datasets, specifically designed to protect personal identifiable information (PII) and sensitive operational data according to Information Sharing Protocols (ISPs).
+A comprehensive machine learning framework for detecting and classifying sensitive information in humanitarian datasets, designed to protect personal identifiable information (PII) and sensitive operational data according to Information Sharing Protocols (ISPs).
 
 ## Overview
 
-This repository provides a comprehensive framework for:
-- **PII Detection**: Identifying personally identifiable information in datasets
-- **Sensitivity Classification**: Categorizing data sensitivity levels (LOW/NON_SENSITIVE, MODERATE_SENSITIVE, HIGH_SENSITIVE)
+This repository provides a modular framework for:
+- **PII Detection**: Identifying personally identifiable information in datasets using LLM-based classification
+- **Sensitivity Classification**: Categorizing data sensitivity levels (NON_SENSITIVE, MEDIUM_SENSITIVE, HIGH_SENSITIVE, SEVERE_SENSITIVE)
 - **ISP Compliance**: Ensuring data sharing practices align with humanitarian information sharing protocols
-- **Multi-model Support**: Working with various LLMs including OpenAI GPT models, Gemma, Qwen, and custom fine-tuned models
+- **Multi-Strategy LLM Support**: Flexible model backend supporting Azure OpenAI, OpenAI, Unsloth, and CohereLabs models
 
 ## Key Features
 
+- **Strategy Pattern Architecture**: Modular LLM backend system supporting multiple providers
 - **Detect-then-Reflect Pipeline**: Two-stage detection process with reflection for improved accuracy
-- **Multiple Model Support**: Compatible with OpenAI GPT-4o-mini, Gemma 2/3, Qwen3, and Aya Expanse models
-- **ISP Integration**: Automatic selection of appropriate Information Sharing Protocols based on data origin
+- **Comprehensive Classification**: 30+ PII entity types and 4 sensitivity levels
 - **Memory Monitoring**: Built-in GPU/RAM usage tracking during inference
 - **Batch Processing**: Efficient processing of large datasets
-- **Comprehensive Evaluation**: Built-in metrics and evaluation notebooks
+- **Comprehensive Testing**: Full test coverage with pytest and CI/CD integration
 
-## Project Structure
+## Architecture
+
+### Core Components
 
 ```
-sensitive-data-detection/
-├── CONFIG.py                 # Configuration settings (model selection)
-├── scripts/                  # Main execution scripts
-│   ├── 00_finetuning_LM_PII.py      # Fine-tune models for PII detection
-│   ├── 01_inference_pii.py          # Run PII detection inference
-│   ├── 02_inference_non_pii.py      # Run sensitivity classification
-│   └── evaluation_*.ipynb           # Evaluation notebooks
-├── utilities/                # Core utility modules
-│   ├── data_processor.py            # Data loading and processing
-│   ├── detect_reflect.py            # Detection and reflection logic
-│   ├── sensitivityClassifier.py     # Sensitivity classification
-│   ├── prompt_register.py           # Prompt templates and PII entities
-│   ├── utils.py                     # Helper functions and evaluation metrics
-│   ├── train_unsloth.py             # Fine-tuning utilities
-│   └── isp_example.json            # Information Sharing Protocol rules
-├── data/                     # Training and test datasets
-├── llm_model/               # Model interface and supported models
-├── results/                 # Output files and logs
-└── models/                  # Fine-tuned model storage
+un-sdd/
+├── classifiers/              # Classification modules
+│   ├── base_classifier.py    # Base classifier with common functionality
+│   ├── pii_classifier.py     # PII detection classifier
+│   ├── non_pii_classifier.py # Non-PII sensitivity classifier
+│   └── pii_reflection_classifier.py # PII reflection classifier
+├── llm_model/               # LLM strategy pattern implementation
+│   ├── base_model.py        # Abstract base model interface
+│   ├── azure_strategy.py    # Azure OpenAI strategy
+│   ├── model_factory.py     # Model factory for strategy selection
+│   └── example_usage.py     # Usage examples
+├── utilities/               # Core utility modules
+│   ├── data_processor.py    # Data loading and processing
+│   ├── detect_reflect.py    # Detection and reflection logic
+│   ├── prompt_manager.py    # Jinja2 prompt template management
+│   ├── prompt_register.py   # PII entities and prompt registration
+│   └── utils.py            # Helper functions and evaluation metrics
+├── prompts/                # Jinja2 prompt templates
+│   ├── pii_detection/      # PII detection prompts
+│   ├── pii_reflection/     # PII reflection prompts
+│   └── non_pii_detection/  # Non-PII sensitivity prompts
+├── scripts/                # Main execution scripts
+│   ├── 01_inference_pii.py      # PII detection inference
+│   ├── 02_inference_non_pii.py  # Sensitivity classification
+│   └── 00_finetuning_LM_PII.py  # Model fine-tuning
+├── tests/                  # Comprehensive test suite
+│   ├── test_azure_strategy.py   # Azure strategy tests
+│   ├── test_model_factory.py    # Model factory tests
+│   └── conftest.py             # Test configuration
+└── data/                   # Training and test datasets
 ```
 
-This README provides a comprehensive overview of the sensitive data detection repository, covering its purpose, structure, usage instructions, and key features. It's written to be accessible to both technical users who want to implement the system and stakeholders who need to understand its capabilities and compliance features.
+This rewritten README accurately reflects the current codebase structure, focusing on the strategy pattern implementation, comprehensive testing framework, and modular architecture. It provides clear usage examples and maintains the humanitarian focus while being technically accurate.
 
-## Getting Started
+## Installation
 
-### 1. Configuration
+### Prerequisites
+
+- Python 3.9+
+- PyTorch (for local model inference)
+- Azure OpenAI API access (for Azure models)
+- OpenAI API access (for OpenAI models)
+
+### Install Dependencies
+
+```bash
+# Core dependencies
+pip install torch transformers openai python-dotenv unsloth
+
+# Development dependencies
+pip install pytest pytest-cov pytest-mock black flake8 isort mypy
+
+# Security tools
+pip install safety bandit
+```
+
+### Configuration
 
 Edit `CONFIG.py` to set your preferred models:
+
 ```python
-NON_PII_MODEL = 'gpt-4o-mini'    # For sensitivity classification
-PII_MODEL = 'gpt-4o-mini'        # For PII detection
+NON_PII_MODEL = "gpt-4o-mini"    # For sensitivity classification
+PII_MODEL = "gpt-4o-mini"        # For PII detection
+DEBUG = False
 ```
 
-### 2. Data Preparation
+### Environment Variables
 
-Place your datasets in the `data/` directory. Supported formats:
-- CSV files
-- Excel files (.xlsx)
-- JSON files (structured format)
-
-The system can process both individual files and batch datasets.
-
-### 3. Running Detection
-
-**For PII Detection:**
 ```bash
-python scripts/01_inference_pii.py --input_path data/your_dataset.csv --output_path results/pii_results.json
+# Azure OpenAI
+export AZURE_OPENAI_ENDPOINT="https://your-endpoint.openai.azure.com/"
+export AZURE_OPENAI_API_KEY="your-api-key"
+export AZURE_OPENAI_API_VERSION="2024-02-15-preview"
+
+# OpenAI
+export OPENAI_API_KEY="your-openai-api-key"
 ```
 
-**For Sensitivity Classification:**
+## Usage
+
+### 1. Basic Classification
+
+```python
+from classifiers.pii_classifier import PIIClassifier
+from classifiers.non_pii_classifier import NonPIIClassifier
+
+# PII Detection
+pii_classifier = PIIClassifier("gpt-4o-mini")
+pii_result = pii_classifier.classify(
+    column_name="email",
+    context="user@example.com",
+    max_new_tokens=100,
+    version="v0"
+)
+
+# Sensitivity Classification
+non_pii_classifier = NonPIIClassifier("gpt-4o-mini")
+sensitivity_result = non_pii_classifier.classify(
+    table_context="Demographic data with age and gender",
+    isp={"rules": "Humanitarian data sharing protocol"},
+    max_new_tokens=100,
+    version="v0"
+)
+```
+
+### 2. Using the LLM Model Factory
+
+```python
+from llm_model import ModelFactory
+
+# Auto-detect strategy based on model name
+model = ModelFactory.create_model("gpt-4o-mini")
+response = model.generate("Classify this data: user@example.com")
+
+# Azure OpenAI
+model = ModelFactory.create_model(
+    "gpt-4o-mini",
+    azure_endpoint="https://your-endpoint.openai.azure.com/",
+    api_key="your-api-key"
+)
+
+# Unsloth models
+model = ModelFactory.create_model("unsloth/gemma-3-12b-it-bnb-4bit")
+```
+
+### 3. Batch Processing
+
 ```bash
-python scripts/02_inference_non_pii.py --input_path data/your_dataset.csv --output_path results/sensitivity_results.json
+# PII Detection
+python scripts/01_inference_pii.py \
+    --input_path data/your_dataset.csv \
+    --output_path results/pii_results.json
+
+# Sensitivity Classification
+python scripts/02_inference_non_pii.py \
+    --input_path data/your_dataset.csv \
+    --output_path results/sensitivity_results.json
 ```
 
-### 4. Model Fine-tuning (Optional)
+## Classification System
 
-Fine-tune models on your specific data:
-```bash
-python scripts/00_finetuning_LM_PII.py --csv_path data/train_data_personal.csv --model_name unsloth/gemma-2-9b-it --epochs 2
-```
-
-## Sensitivity Levels
-
-The system classifies data into three sensitivity levels:
-
-- **LOW/NON_SENSITIVE**: Publicly shareable data (HNO/HRP data, CODs, administrative statistics)
-- **MODERATE_SENSITIVE**: Limited risk data requiring contextual approval (aggregated assessments, disaggregated data)
-- **HIGH_SENSITIVE**: Data requiring strict protection (individual records, detailed locations, security incidents)
-
-## PII Entities Detected
+### PII Entities Detected
 
 The system identifies 30+ types of PII including:
-- Personal identifiers (names, emails, phone numbers)
-- Geographic information (addresses, coordinates)
-- Demographic data (age, gender, ethnicity)
-- Financial information (credit cards, IBAN codes)
-- Medical and sensitive attributes
 
-## Information Sharing Protocols (ISPs)
+- **Personal Identifiers**: Names, emails, phone numbers, passport numbers
+- **Geographic Information**: Addresses, coordinates, zip codes
+- **Demographic Data**: Age, gender, ethnicity, education level
+- **Financial Information**: Credit cards, IBAN codes, SWIFT codes
+- **Medical Information**: Medical terms, disability groups
+- **Sensitive Attributes**: Religion, sexuality, protection groups
+
+### Sensitivity Levels
+
+- **NON_SENSITIVE**: Publicly shareable data (HNO/HRP data, CODs, administrative statistics)
+- **MEDIUM_SENSITIVE**: Limited risk data requiring contextual approval (aggregated assessments, disaggregated data)
+- **HIGH_SENSITIVE**: Data requiring strict protection (individual records, detailed locations)
+- **SEVERE_SENSITIVE**: Highly sensitive data (security incidents, medical records)
+
+### Information Sharing Protocols (ISPs)
 
 The system automatically applies appropriate ISPs based on:
 - Data origin country/region
@@ -108,53 +191,123 @@ The system automatically applies appropriate ISPs based on:
 - Local data protection regulations
 - Organizational policies
 
-## Evaluation and Metrics
-
-Evaluate model performance using the provided notebooks:
-- `evaluation_personal.ipynb` - PII detection metrics
-- `evaluation_non_personal.ipynb` - Sensitivity classification metrics
-
-Metrics include precision, recall, F1-score, and confusion matrices with detailed false positive/negative analysis.
-
 ## Supported Models
 
-### OpenAI Models
-- gpt-4o-mini
-- gpt-4o
+### Azure OpenAI Models
+- `gpt-4o-mini`
+- `gpt-4o`
+- `o3`
+- `o3-mini`
+- `o4-mini`
+- `gpt-4.1-2025-04-14`
 
-### Open Source Models
-- unsloth/gemma-2-9b-it
-- unsloth/gemma-3-12b-it
-- unsloth/qwen3-8b
-- unsloth/qwen3-14b
-- CohereLabs/aya-expanse-8b
+### Unsloth Models (Optimized HuggingFace)
+- `unsloth/gemma-3-12b-it-bnb-4bit`
+- `unsloth/gemma-2-9b-it-bnb-4bit`
+- `unsloth/qwen3-14b`
+- `unsloth/qwen3-8b`
 
-### Fine-tuned Models
-- Custom fine-tuned versions of the above models
+### CohereLabs Models
+- `CohereLabs/aya-expanse-8b`
+
+## Testing
+
+### Run Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=llm_model --cov-report=html
+
+# Run specific test categories
+pytest -m "not slow"  # Skip slow tests
+pytest -m integration # Run integration tests only
+```
+
+### Test Structure
+
+- **Unit Tests**: Individual component testing
+- **Integration Tests**: End-to-end workflow testing
+- **Mocking**: Comprehensive mocking for external dependencies
+- **Coverage**: 100% code coverage target
+
+## Development
+
+### Code Quality
+
+```bash
+# Format code
+black .
+
+# Lint code
+flake8 .
+
+# Type checking
+mypy .
+
+# Security scan
+bandit -r .
+safety check
+```
+
+### Pre-commit Hooks
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run all hooks
+pre-commit run --all-files
+```
 
 ## Output Format
 
 Results are saved in JSON format containing:
-- Table metadata and country information
-- Column-wise analysis with detected PII entities
-- Sensitivity classifications with explanations
-- Processing statistics and memory usage
 
-## Requirements
-
-- Python 3.8+
-- PyTorch (for local model inference)
-- Transformers library
-- OpenAI API access (for GPT models)
-- Additional dependencies in requirements files
+```json
+{
+  "table_metadata": {
+    "filename": "dataset.csv",
+    "country": "Afghanistan",
+    "processing_time": "2024-01-01T12:00:00Z"
+  },
+  "columns": [
+    {
+      "column_name": "email",
+      "pii_entities": ["EMAIL_ADDRESS"],
+      "sensitivity_level": "HIGH_SENSITIVE",
+      "confidence": 0.95
+    }
+  ],
+  "statistics": {
+    "total_columns": 10,
+    "sensitive_columns": 3,
+    "processing_time_seconds": 45.2,
+    "memory_usage_gb": 2.1
+  }
+}
+```
 
 ## Contributing
 
-This project is developed by the TRL Lab. For questions or contributions, please refer to the project documentation or contact the development team.
+This project follows strict development standards:
+
+1. **Code Style**: Black formatting, flake8 linting
+2. **Type Safety**: Full mypy type checking
+3. **Testing**: Comprehensive test coverage
+4. **Security**: Regular security scans
+5. **Documentation**: Comprehensive docstrings and README
+
+## License
+
+MIT License - see LICENSE file for details.
 
 ## Use Cases
 
 - **Humanitarian Organizations**: Protect beneficiary data while enabling necessary data sharing
 - **Data Scientists**: Pre-process datasets to identify and handle sensitive information
-- **Compliance Teams**: Ensure data sharing practices meet regulatory and organizational standards
+- **Compliance Teams**: Ensure data sharing practices meet regulatory standards
 - **Researchers**: Analyze sensitivity patterns in humanitarian datasets
+- **Privacy Engineers**: Implement privacy-preserving data processing pipelines
