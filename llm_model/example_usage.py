@@ -8,10 +8,7 @@ This script demonstrates how to use the different model strategies.
 import os
 from llm_model import (
     ModelFactory,
-    OpenAIStrategy,
     AzureOpenAIStrategy,
-    UnslothStrategy,
-    CohereStrategy,
 )
 
 
@@ -27,26 +24,19 @@ def example_factory_usage():
     except Exception as e:
         print(f"OpenAI Error: {e}")
 
-    # Unsloth model
-    try:
-        model = ModelFactory.create_model("unsloth/gemma-3-12b-it-bnb-4bit")
-        response = model.generate("What is the capital of France?")
-        print(f"Unsloth Response: {response}")
-    except Exception as e:
-        print(f"Unsloth Error: {e}")
 
 
 def example_direct_strategy_usage():
     """Example using strategies directly."""
     print("\n=== Direct Strategy Usage ===")
 
-    # OpenAI Strategy
+    # Azure OpenAI Strategy
     try:
-        model = OpenAIStrategy("gpt-4o-mini")
+        model = AzureOpenAIStrategy("gpt-4o-mini")
         response = model.generate("What is the capital of France?")
-        print(f"OpenAI Strategy Response: {response}")
+        print(f"Azure OpenAI Strategy Response: {response}")
     except Exception as e:
-        print(f"OpenAI Strategy Error: {e}")
+        print(f"Azure OpenAI Strategy Error: {e}")
 
     # Azure OpenAI Strategy (if configured)
     try:
