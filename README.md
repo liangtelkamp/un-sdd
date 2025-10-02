@@ -129,26 +129,6 @@ sensitivity_result = non_pii_classifier.classify(
 )
 ```
 
-### 2. Using the LLM Model Factory
-
-```python
-from llm_model import ModelFactory
-
-# Auto-detect strategy based on model name
-model = ModelFactory.create_model("gpt-4o-mini")
-response = model.generate("Classify this data: user@example.com")
-
-# Azure OpenAI
-model = ModelFactory.create_model(
-    "gpt-4o-mini",
-    azure_endpoint="https://your-endpoint.openai.azure.com/",
-    api_key="your-api-key"
-)
-
-# Unsloth models
-model = ModelFactory.create_model("unsloth/gemma-3-12b-it-bnb-4bit")
-```
-
 ### 3. Batch Processing
 
 ```bash

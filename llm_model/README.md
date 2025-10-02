@@ -28,26 +28,6 @@ CohereLabs models (e.g., Aya Expanse).
 
 ## Usage
 
-### Using ModelFactory (Recommended)
-
-```python
-from llm_model import ModelFactory
-
-# Create model using factory (auto-detects strategy)
-model = ModelFactory.create_model("gpt-4o-mini")
-response = model.generate("Hello, world!")
-
-# Azure OpenAI
-model = ModelFactory.create_model(
-    "gpt-4o-mini", 
-    azure_endpoint="https://your-endpoint.openai.azure.com/",
-    api_key="your-api-key"
-)
-
-# Unsloth model
-model = ModelFactory.create_model("unsloth/gemma-3-12b-it-bnb-4bit")
-```
-
 ### Using Strategies Directly
 
 ```python

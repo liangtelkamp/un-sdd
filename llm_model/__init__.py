@@ -6,23 +6,12 @@ This module provides a strategy pattern implementation for different LLM provide
 - Azure OpenAI
 - Unsloth (optimized HuggingFace models)
 - CohereLabs (Aya models)
-
-Usage:
-    from llm_model import ModelFactory
-
-    # Create model using factory
-    model = ModelFactory.create_model("gpt-4o-mini")
-
-    # Generate text
-    response = model.generate("Hello, world!")
 """
 
 from .base_model import BaseLLMModel
 from .azure_strategy import AzureOpenAIStrategy
-from .model_factory import ModelFactory
 
 __all__ = [
     "BaseLLMModel",
     "AzureOpenAIStrategy",
-    "ModelFactory",
 ]
